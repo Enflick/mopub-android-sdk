@@ -9,6 +9,7 @@ import com.mopub.common.util.DateAndTime;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.lang.ref.SoftReference;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -76,6 +77,9 @@ public class AdResponse implements Serializable {
 
     private final long mTimestamp;
 
+    @Nullable
+    private final SoftReference<JSONObject> mRawPayload;
+
     private AdResponse(@NonNull Builder builder) {
 
         mAdType = builder.adType;
@@ -107,6 +111,7 @@ public class AdResponse implements Serializable {
         mBrowserAgent = builder.browserAgent;
         mServerExtras = builder.serverExtras;
         mTimestamp = DateAndTime.now().getTime();
+        mRawPayload = builder.rawPayload;
     }
 
     public boolean hasJson() {
@@ -197,6 +202,11 @@ public class AdResponse implements Serializable {
         return mRequestId;
     }
 
+    @Nullable
+    public SoftReference<JSONObject> getRawPayload() {
+        return mRawPayload;
+    }
+
     public boolean isScrollable() {
         return mScrollable;
     }
@@ -267,7 +277,8 @@ public class AdResponse implements Serializable {
                 .setJsonBody(mJsonBody)
                 .setCustomEventClassName(mCustomEventClassName)
                 .setBrowserAgent(mBrowserAgent)
-                .setServerExtras(mServerExtras);
+                .setServerExtras(mServerExtras)
+                .setRawPayload(mRawPayload);
     }
 
     public static class Builder {
@@ -302,6 +313,9 @@ public class AdResponse implements Serializable {
 
         private String customEventClassName;
         private BrowserAgent browserAgent;
+
+        @Nullable
+        private SoftReference<JSONObject> rawPayload;
 
         private Map<String, String> serverExtras = new TreeMap<String, String>();
 
@@ -384,7 +398,7 @@ public class AdResponse implements Serializable {
         }
 
         public Builder setDimensions(@Nullable final Integer width,
-                @Nullable final Integer height) {
+                                     @Nullable final Integer height) {
             this.width = width;
             this.height = height;
             return this;
@@ -441,6 +455,11 @@ public class AdResponse implements Serializable {
 
         public AdResponse build() {
             return new AdResponse(this);
+        }
+
+        public Builder setRawPayload(@Nullable final SoftReference<JSONObject> rawPayload) {
+            this.rawPayload = rawPayload;
+            return this;
         }
     }
 }

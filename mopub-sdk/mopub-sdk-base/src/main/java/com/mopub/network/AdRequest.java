@@ -29,6 +29,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -402,7 +403,7 @@ public class AdRequest extends MoPubRequest<AdResponse> {
             }
         }
 
-        AdResponse adResponse = builder.build();
+        builder.setRawPayload(new SoftReference<>(jsonHeaders));
 
         return Response.success(builder.build(),  // Cast needed for Response generic.
                 HttpHeaderParser.parseCacheHeaders(networkResponse));
