@@ -21,7 +21,6 @@ import com.mopub.common.util.ManifestUtils;
 import com.mopub.common.util.Reflection;
 import com.mopub.common.util.Visibility;
 import com.mopub.mobileads.factories.AdViewControllerFactory;
-import com.mopub.network.AdResponse;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -184,10 +183,6 @@ public class MoPubView extends FrameLayout {
         } else {
             MoPubLog.e("Could not load custom event -- missing banner module");
         }
-    }
-
-    protected void loadCustomEvent(String customEventClassName, Map<String, String> serverExtras, AdResponse adResponse) {
-        loadCustomEvent(customEventClassName, serverExtras);
     }
 
     protected void registerClick() {
