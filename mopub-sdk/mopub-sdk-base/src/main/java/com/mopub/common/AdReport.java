@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
+ *
  * A value class used for generating reports to send data back to MoPub
  */
 public class AdReport implements Serializable {
