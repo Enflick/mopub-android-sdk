@@ -61,6 +61,10 @@ public class AdReport implements Serializable {
         return parameters.toString();
     }
 
+    public AdResponse getAdResponse() {
+        return mAdResponse;
+    }
+
     public String getResponseString() {
         return mAdResponse.getStringBody();
     }

@@ -149,8 +149,7 @@ public class AdViewController {
         mRefreshTimeMillis = mAdResponse.getRefreshTimeMillis();
         setNotLoading();
 
-        loadCustomEvent(mMoPubView, adResponse.getCustomEventClassName(),
-                adResponse.getServerExtras());
+        loadCustomEvent(mMoPubView, adResponse.getCustomEventClassName(), adResponse.getServerExtras());
 
         scheduleRefreshTimerIfEnabled();
     }
@@ -181,8 +180,8 @@ public class AdViewController {
 
     @VisibleForTesting
     void loadCustomEvent(@Nullable final MoPubView moPubView,
-            @Nullable final String customEventClassName,
-            @NonNull final Map<String, String> serverExtras) {
+                         @Nullable final String customEventClassName,
+                         @NonNull final Map<String, String> serverExtras) {
         Preconditions.checkNotNull(serverExtras);
 
         if (moPubView == null) {
