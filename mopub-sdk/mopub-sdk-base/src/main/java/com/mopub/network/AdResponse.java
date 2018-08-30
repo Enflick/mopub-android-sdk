@@ -9,7 +9,6 @@ import com.mopub.common.util.DateAndTime;
 import org.json.JSONObject;
 
 import java.io.Serializable;
-import java.lang.ref.SoftReference;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -78,7 +77,7 @@ public class AdResponse implements Serializable {
     private final long mTimestamp;
 
     @Nullable
-    private final SoftReference<JSONObject> mRawPayload;
+    private final JSONObject mRawPayload;
 
     private AdResponse(@NonNull Builder builder) {
 
@@ -203,7 +202,7 @@ public class AdResponse implements Serializable {
     }
 
     @Nullable
-    public SoftReference<JSONObject> getRawPayload() {
+    public JSONObject getRawPayload() {
         return mRawPayload;
     }
 
@@ -315,7 +314,7 @@ public class AdResponse implements Serializable {
         private BrowserAgent browserAgent;
 
         @Nullable
-        private SoftReference<JSONObject> rawPayload;
+        private JSONObject rawPayload;
 
         private Map<String, String> serverExtras = new TreeMap<String, String>();
 
@@ -457,7 +456,7 @@ public class AdResponse implements Serializable {
             return new AdResponse(this);
         }
 
-        public Builder setRawPayload(@Nullable final SoftReference<JSONObject> rawPayload) {
+        public Builder setRawPayload(@Nullable final JSONObject rawPayload) {
             this.rawPayload = rawPayload;
             return this;
         }
