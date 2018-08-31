@@ -1,6 +1,7 @@
 package com.mopub.common;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,6 +18,7 @@ import java.lang.ref.WeakReference;
 public class JSONObjectSerializable implements Serializable {
     private static final long serialVersionUID = 0L;
 
+    @Nullable
     private WeakReference<JSONObject> mJSONObject = null;
 
     public JSONObjectSerializable(@NonNull final JSONObject o) {
@@ -44,5 +46,10 @@ public class JSONObjectSerializable implements Serializable {
             } catch (IOException e) {
             }
         }
+    }
+
+    @Nullable
+    public WeakReference<JSONObject> getJSONObject() {
+        return mJSONObject;
     }
 }
