@@ -3,6 +3,7 @@ package com.mopub.network;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.mopub.common.JSONObjectSerializable;
 import com.mopub.common.MoPub.BrowserAgent;
 import com.mopub.common.util.DateAndTime;
 
@@ -77,7 +78,7 @@ public class AdResponse implements Serializable {
     private final long mTimestamp;
 
     @Nullable
-    private final JSONObject mRawPayload;
+    private final JSONObjectSerializable mRawPayload;
 
     private AdResponse(@NonNull Builder builder) {
 
@@ -202,7 +203,7 @@ public class AdResponse implements Serializable {
     }
 
     @Nullable
-    public JSONObject getRawPayload() {
+    public JSONObjectSerializable getRawPayload() {
         return mRawPayload;
     }
 
@@ -314,7 +315,7 @@ public class AdResponse implements Serializable {
         private BrowserAgent browserAgent;
 
         @Nullable
-        private JSONObject rawPayload;
+        private JSONObjectSerializable rawPayload;
 
         private Map<String, String> serverExtras = new TreeMap<String, String>();
 
@@ -456,7 +457,7 @@ public class AdResponse implements Serializable {
             return new AdResponse(this);
         }
 
-        public Builder setRawPayload(@Nullable final JSONObject rawPayload) {
+        public Builder setRawPayload(@Nullable final JSONObjectSerializable rawPayload) {
             this.rawPayload = rawPayload;
             return this;
         }
