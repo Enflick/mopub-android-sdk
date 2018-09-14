@@ -12,6 +12,7 @@ import com.mopub.common.Constants;
 import com.mopub.common.DataKeys;
 import com.mopub.common.ExternalViewabilitySessionManager;
 import com.mopub.common.FullAdType;
+import com.mopub.common.JSONObjectSerializable;
 import com.mopub.common.MoPub;
 import com.mopub.common.Preconditions;
 import com.mopub.common.logging.MoPubLog;
@@ -405,6 +406,8 @@ public class MultiAdResponse implements Iterator<AdResponse> {
             builder.setRewardedDuration(rewardedDuration);
             builder.setShouldRewardOnClick(shouldRewardOnClick);
         }
+
+        builder.setRawPayload(new JSONObjectSerializable(jsonHeaders));
 
         return builder.build();
     }
