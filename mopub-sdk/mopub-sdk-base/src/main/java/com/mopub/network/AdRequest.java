@@ -49,8 +49,6 @@ public class AdRequest extends MoPubRequest<AdResponse> {
     private static final String ADM_KEY = "adm";
     private static final String BODY_KEY = "body";
     private static final String HEADERS_KEY = "headers";
-    private static final String AD_SOURCE_ID_KEY = "x-adgroupid";
-    private static final String CREATIVE_ID_KEY = "x-creativeid";
 
     @NonNull private final AdRequest.Listener mListener;
     @NonNull private final AdFormat mAdFormat;
@@ -406,20 +404,9 @@ public class AdRequest extends MoPubRequest<AdResponse> {
             }
         }
 
-        String adSourceId = null;
-        try {
-            adSourceId = jsonHeaders.getString(AD_SOURCE_ID_KEY);
-        } catch (JSONException e) {
-            Log.e(TAG, "There was an error extracting the ad source ID", e);
-        }
+        String adSourceId = extractHeader(jsonHeaders, ResponseHeader.AD_SOURCE_ID);
         builder.setAdSourceId(adSourceId);
-
-        String creativeId = null;
-        try {
-            creativeId = jsonHeaders.getString(CREATIVE_ID_KEY);
-        } catch (JSONException e) {
-            Log.e(TAG, "There was an error extracting the creative ID", e);
-        }
+        String creativeId = extractHeader(jsonHeaders, ResponseHeader.CREATIVE_ID);
         builder.setCreativeId(creativeId);
 
         return Response.success(builder.build(),  // Cast needed for Response generic.
