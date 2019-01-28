@@ -1,6 +1,7 @@
 package com.mopub.common.util;
 
 public enum ResponseHeader {
+    AD_SOURCE_ID("x-AdGroupId"),
     AD_TIMEOUT("X-AdTimeout"),
     AD_TYPE("X-Adtype"),
     CLICK_TRACKING_URL("X-Clickthrough"),

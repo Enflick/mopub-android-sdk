@@ -5,12 +5,12 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.mopub.common.AdFormat;
 import com.mopub.common.AdType;
 import com.mopub.common.DataKeys;
 import com.mopub.common.FullAdType;
-import com.mopub.common.JSONObjectSerializable;
 import com.mopub.common.MoPub;
 import com.mopub.common.MoPub.BrowserAgent;
 import com.mopub.common.Preconditions;
@@ -42,6 +42,7 @@ import static com.mopub.network.HeaderUtils.extractIntegerHeader;
 import static com.mopub.network.HeaderUtils.extractPercentHeaderString;
 
 public class AdRequest extends MoPubRequest<AdResponse> {
+    private static final String TAG = "AdRequest";
 
     @VisibleForTesting
     static final String AD_RESPONSES_KEY = "ad-responses";
@@ -403,7 +404,10 @@ public class AdRequest extends MoPubRequest<AdResponse> {
             }
         }
 
-        builder.setRawPayload(new JSONObjectSerializable(jsonHeaders));
+        String adSourceId = extractHeader(jsonHeaders, ResponseHeader.AD_SOURCE_ID);
+        builder.setAdSourceId(adSourceId);
+        String creativeId = extractHeader(jsonHeaders, ResponseHeader.CREATIVE_ID);
+        builder.setCreativeId(creativeId);
 
         return Response.success(builder.build(),  // Cast needed for Response generic.
                 HttpHeaderParser.parseCacheHeaders(networkResponse));

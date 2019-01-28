@@ -78,7 +78,10 @@ public class AdResponse implements Serializable {
     private final long mTimestamp;
 
     @Nullable
-    private final JSONObjectSerializable mRawPayload;
+    private final String mAdSourceId;
+
+    @Nullable
+    private final String mCreativeId;
 
     private AdResponse(@NonNull Builder builder) {
 
@@ -111,7 +114,8 @@ public class AdResponse implements Serializable {
         mBrowserAgent = builder.browserAgent;
         mServerExtras = builder.serverExtras;
         mTimestamp = DateAndTime.now().getTime();
-        mRawPayload = builder.rawPayload;
+        mAdSourceId = builder.adSourceId;
+        mCreativeId = builder.creativeId;
     }
 
     public boolean hasJson() {
@@ -203,8 +207,13 @@ public class AdResponse implements Serializable {
     }
 
     @Nullable
-    public JSONObjectSerializable getRawPayload() {
-        return mRawPayload;
+    public String getAdSourceId() {
+        return mAdSourceId;
+    }
+
+    @Nullable
+    public String getCreativeId() {
+        return mCreativeId;
     }
 
     public boolean isScrollable() {
@@ -278,7 +287,8 @@ public class AdResponse implements Serializable {
                 .setCustomEventClassName(mCustomEventClassName)
                 .setBrowserAgent(mBrowserAgent)
                 .setServerExtras(mServerExtras)
-                .setRawPayload(mRawPayload);
+                .setAdSourceId(mAdSourceId)
+                .setCreativeId(mCreativeId);
     }
 
     public static class Builder {
@@ -315,7 +325,9 @@ public class AdResponse implements Serializable {
         private BrowserAgent browserAgent;
 
         @Nullable
-        private JSONObjectSerializable rawPayload;
+        private String adSourceId;
+        @Nullable
+        private String creativeId;
 
         private Map<String, String> serverExtras = new TreeMap<String, String>();
 
@@ -457,8 +469,13 @@ public class AdResponse implements Serializable {
             return new AdResponse(this);
         }
 
-        public Builder setRawPayload(@Nullable final JSONObjectSerializable rawPayload) {
-            this.rawPayload = rawPayload;
+        public Builder setAdSourceId(@Nullable final String adSourceId) {
+            this.adSourceId = adSourceId;
+            return this;
+        }
+
+        public Builder setCreativeId(@Nullable final String creativeId) {
+            this.creativeId = creativeId;
             return this;
         }
     }
