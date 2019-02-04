@@ -88,6 +88,12 @@ public class AdResponse implements Serializable {
 
     private final long mTimestamp;
 
+    @Nullable
+    private final String mAdSourceId;
+
+    @Nullable
+    private final String mCreativeId;
+
     private AdResponse(@NonNull Builder builder) {
 
         mAdType = builder.adType;
@@ -121,6 +127,8 @@ public class AdResponse implements Serializable {
         mBrowserAgent = builder.browserAgent;
         mServerExtras = builder.serverExtras;
         mTimestamp = DateAndTime.now().getTime();
+        mAdSourceId = builder.adSourceId;
+        mCreativeId = builder.creativeId;
     }
 
     public boolean hasJson() {
@@ -228,6 +236,16 @@ public class AdResponse implements Serializable {
     }
 
     @Nullable
+    public String getAdSourceId() {
+        return mAdSourceId;
+    }
+
+    @Nullable
+    public String getCreativeId() {
+        return mCreativeId;
+    }
+
+    @Nullable
     public Integer getWidth() {
         return mWidth;
     }
@@ -298,7 +316,9 @@ public class AdResponse implements Serializable {
                 .setJsonBody(mJsonBody)
                 .setCustomEventClassName(mCustomEventClassName)
                 .setBrowserAgent(mBrowserAgent)
-                .setServerExtras(mServerExtras);
+                .setServerExtras(mServerExtras)
+                .setAdSourceId(mAdSourceId)
+                .setCreativeId(mCreativeId);
     }
 
     public static class Builder {
@@ -336,6 +356,11 @@ public class AdResponse implements Serializable {
         private BrowserAgent browserAgent;
 
         private Map<String, String> serverExtras = new TreeMap<>();
+
+        @Nullable
+        private String adSourceId;
+        @Nullable
+        private String creativeId;
 
         public Builder setAdType(@Nullable final String adType) {
             this.adType = adType;
@@ -488,6 +513,16 @@ public class AdResponse implements Serializable {
 
         public AdResponse build() {
             return new AdResponse(this);
+        }
+
+        public Builder setAdSourceId(@Nullable final String adSourceId) {
+            this.adSourceId = adSourceId;
+            return this;
+        }
+
+        public Builder setCreativeId(@Nullable final String creativeId) {
+            this.creativeId = creativeId;
+            return this;
         }
     }
 }

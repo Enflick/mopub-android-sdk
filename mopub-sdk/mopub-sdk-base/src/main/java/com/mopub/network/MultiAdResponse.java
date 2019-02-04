@@ -420,6 +420,11 @@ public class MultiAdResponse implements Iterator<AdResponse> {
             builder.setShouldRewardOnClick(shouldRewardOnClick);
         }
 
+        String adSourceId = extractHeader(jsonHeaders, ResponseHeader.AD_SOURCE_ID);
+        builder.setAdSourceId(adSourceId);
+        String creativeId = extractHeader(jsonHeaders, ResponseHeader.CREATIVE_ID);
+        builder.setCreativeId(creativeId);
+
         return builder.build();
     }
 
