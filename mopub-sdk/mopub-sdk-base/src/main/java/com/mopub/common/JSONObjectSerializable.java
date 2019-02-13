@@ -22,9 +22,9 @@ public class JSONObjectSerializable implements Serializable {
 
     public static class AdResponseInfo {
         @Nullable
-        public String creativeid = null;
+        public String creativeId = null;
         @Nullable
-        public String adsourceid = null;
+        public String adSourceId = null;
     }
 
     @Nullable
@@ -66,8 +66,8 @@ public class JSONObjectSerializable implements Serializable {
         }
         AdResponseInfo adResponseInfo = new AdResponseInfo();
         try {
-            adResponseInfo.adsourceid = mJSONObject.getString(ResponseHeader.AD_SOURCE_ID.getKey());
-            adResponseInfo.creativeid = mJSONObject.getString(ResponseHeader.CREATIVE_ID.getKey());
+            adResponseInfo.adSourceId = mJSONObject.getString(ResponseHeader.AD_SOURCE_ID.getKey());
+            adResponseInfo.creativeId = mJSONObject.getString(ResponseHeader.CREATIVE_ID.getKey());
         } catch (Exception e) {
             return null;
         }
