@@ -6,6 +6,8 @@ package com.mopub.nativeads;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Point;
 import android.location.Location;
@@ -19,6 +21,8 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
+import com.mopub.common.AppEngineInfo;
+import com.mopub.common.BaseUrlGenerator;
 import com.mopub.common.LocationService;
 import com.mopub.common.MoPub;
 import com.mopub.common.privacy.ConsentStatus;
@@ -51,7 +55,9 @@ import java.util.List;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -61,8 +67,11 @@ import static org.mockito.Mockito.when;
 @Config(shadows = {MoPubShadowTelephonyManager.class, MoPubShadowConnectivityManager.class})
 public class NativeUrlGeneratorTest {
     private static final String AD_UNIT_ID = "1234";
+    private static final String TEST_BUNDLE = "test.bundle";
     private static final int TEST_SCREEN_WIDTH = 320;
     private static final int TEST_SCREEN_HEIGHT = 470;
+    private static final int TEST_SCREEN_SAFE_WIDTH = 0;
+    private static final int TEST_SCREEN_SAFE_HEIGHT = 0;
     private static final float TEST_DENSITY = 1.0f;
     private Activity context;
     private NativeUrlGenerator subject;
@@ -75,7 +84,7 @@ public class NativeUrlGeneratorTest {
         context = spy(Robolectric.buildActivity(Activity.class).create().get());
         Shadows.shadowOf(context).grantPermissions(ACCESS_NETWORK_STATE);
         Shadows.shadowOf(context).grantPermissions(ACCESS_FINE_LOCATION);
-        when(context.getPackageName()).thenReturn("testBundle");
+        when(context.getPackageName()).thenReturn(TEST_BUNDLE);
         shadowTelephonyManager = (MoPubShadowTelephonyManager)
                 Shadows.shadowOf((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE));
         shadowConnectivityManager = (MoPubShadowConnectivityManager)
@@ -93,6 +102,14 @@ public class NativeUrlGeneratorTest {
         when(spyResources.getDisplayMetrics()).thenReturn(mockDisplayMetrics);
         when(context.getResources()).thenReturn(spyResources);
 
+        final Context spyApplicationContext = spy(context.getApplicationContext());
+        when(spyApplicationContext.getPackageName()).thenReturn(TEST_BUNDLE);
+        PackageManager mockPackageManager = mock(PackageManager.class);
+        PackageInfo mockPackageInfo = mock(PackageInfo.class);
+        mockPackageInfo.versionName = BuildConfig.VERSION_NAME;
+        when(mockPackageManager.getPackageInfo(any(String.class), anyInt())).thenReturn(mockPackageInfo);
+        when(spyApplicationContext.getPackageManager()).thenReturn(mockPackageManager);
+
         // Only do this on Android 17+ because getRealSize doesn't exist before then.
         // This is the default pathway.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
@@ -108,7 +125,6 @@ public class NativeUrlGeneratorTest {
                 }
             }).when(mockDisplay).getRealSize(any(Point.class));
             when(mockWindowManager.getDefaultDisplay()).thenReturn(mockDisplay);
-            final Context spyApplicationContext = spy(context.getApplicationContext());
             when(spyApplicationContext.getSystemService(Context.WINDOW_SERVICE)).thenReturn(mockWindowManager);
             when(context.getApplicationContext()).thenReturn(spyApplicationContext);
         }
@@ -131,6 +147,7 @@ public class NativeUrlGeneratorTest {
                 .setStatic(MoPub.class)
                 .setAccessible()
                 .execute();
+        BaseUrlGenerator.setAppEngineInfo(null);
     }
 
     @Test
@@ -434,9 +451,13 @@ public class NativeUrlGeneratorTest {
                         AD_UNIT_ID +
                         "&nv=" + Uri.encode(MoPub.SDK_VERSION) +
                         "&dn=unknown%2Crobolectric%2Crobolectric" +
-                        "&bundle=com.mopub.mobileads" +
+                        "&bundle=" + TEST_BUNDLE +
                         "&z=-0700" +
                         "&o=p" +
+                        "&cw=" +
+                        TEST_SCREEN_SAFE_WIDTH +
+                        "&ch=" +
+                        TEST_SCREEN_SAFE_HEIGHT +
                         "&w=" +
                         TEST_SCREEN_WIDTH +
                         "&h=" +
@@ -445,6 +466,7 @@ public class NativeUrlGeneratorTest {
                         TEST_DENSITY +
                         "&ct=3&av=" + Uri.encode(BuildConfig.VERSION_NAME) +
                         "&udid=mp_tmpl_advertising_id&dnt=mp_tmpl_do_not_track" +
+                        "&mid=mp_tmpl_mopub_id" +
                         "&gdpr_applies=0" +
                         "&current_consent_status=unknown");
     }
@@ -484,6 +506,25 @@ public class NativeUrlGeneratorTest {
 
         String requestString = generateMinimumUrlString();
         assertThat(getParameterFromRequestUrl(requestString, "ll")).isNullOrEmpty();
+    }
+
+    @Test
+    public void generateUrlString_whenEngineInfoIsNotSet_shouldIncludeEngineInfo() {
+        subject = new NativeUrlGenerator(context).withAdUnitId(AD_UNIT_ID);
+        String adUrl = generateMinimumUrlString();
+
+        assertThat(getParameterFromRequestUrl(adUrl, "e_name")).isNullOrEmpty();
+        assertThat(getParameterFromRequestUrl(adUrl, "e_ver")).isNullOrEmpty();
+    }
+
+    @Test
+    public void generateUrlString_whenEngineInfoIsSet_shouldIncludeEngineInfo() {
+        subject = new NativeUrlGenerator(context).withAdUnitId(AD_UNIT_ID);
+        MoPub.setEngineInformation(new AppEngineInfo("ename", "eversion"));
+        String adUrl = generateMinimumUrlString();
+
+        assertEquals(getParameterFromRequestUrl(adUrl, "e_name"), "ename");
+        assertEquals(getParameterFromRequestUrl(adUrl, "e_ver"), "eversion");
     }
 
     private List<String> getDesiredAssetsListFromRequestUrlString(String requestString) {

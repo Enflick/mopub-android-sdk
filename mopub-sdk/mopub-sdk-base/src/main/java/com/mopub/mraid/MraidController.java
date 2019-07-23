@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -42,6 +43,7 @@ import com.mopub.common.util.DeviceUtils;
 import com.mopub.common.util.Dips;
 import com.mopub.common.util.Views;
 import com.mopub.mobileads.BaseWebView;
+import com.mopub.mobileads.MoPubErrorCode;
 import com.mopub.mobileads.MraidVideoPlayerActivity;
 import com.mopub.mobileads.util.WebViews;
 import com.mopub.mraid.MraidBridge.MraidBridgeListener;
@@ -49,10 +51,12 @@ import com.mopub.mraid.MraidBridge.MraidWebView;
 
 import java.lang.ref.WeakReference;
 import java.net.URI;
+import java.util.EnumSet;
 
 import static android.content.pm.ActivityInfo.CONFIG_ORIENTATION;
 import static android.content.pm.ActivityInfo.CONFIG_SCREEN_SIZE;
 import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
+import static com.mopub.common.util.ManifestUtils.isDebuggable;
 import static com.mopub.common.util.Utils.bitMaskContainsFlag;
 
 public class MraidController {
@@ -61,6 +65,7 @@ public class MraidController {
     public interface MraidListener {
         void onLoaded(View view);
         void onFailedToLoad();
+        void onRenderProcessGone(@NonNull final MoPubErrorCode errorCode);
         void onExpand();
         void onResize(final boolean toOriginalSize);
         void onOpen();
@@ -121,6 +126,31 @@ public class MraidController {
     // This is needed to restore the Activity's requested orientation in the event that the view
     // itself requires an orientation lock.
     @Nullable private Integer mOriginalActivityOrientation;
+
+    // UI flags for hiding the status bar when expanded
+    private final int mExpandedUiFlags;
+
+    // UI flags before expanding for restoration when not expanded
+    private int mOriginalUiFlags;
+
+    @NonNull private UrlHandler.MoPubSchemeListener mDebugSchemeListener
+            = new UrlHandler.MoPubSchemeListener() {
+        @Override
+        public void onFinishLoad() { }
+
+        @Override
+        public void onClose() { }
+
+        @Override
+        public void onFailLoad() { }
+
+        @Override
+        public void onCrash() {
+            if (mMraidWebView != null) {
+                mMraidWebView.loadUrl("chrome://crash");
+            }
+        }
+    };
 
     private boolean mAllowOrientationChange = true;
     private MraidOrientation mForceOrientation = MraidOrientation.NONE;
@@ -185,6 +215,18 @@ public class MraidController {
         mMraidBridge.setMraidBridgeListener(mMraidBridgeListener);
         mTwoPartBridge.setMraidBridgeListener(mTwoPartBridgeListener);
         mMraidNativeCommandHandler = new MraidNativeCommandHandler();
+
+        int flags = View.SYSTEM_UI_FLAG_LOW_PROFILE
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+        }
+
+        mExpandedUiFlags = flags;
     }
 
     @SuppressWarnings("FieldCanBeLocal")
@@ -202,6 +244,11 @@ public class MraidController {
             if (mMraidListener != null) {
                 mMraidListener.onFailedToLoad();
             }
+        }
+
+        @Override
+        public void onRenderProcessGone(@NonNull final MoPubErrorCode errorCode) {
+            handleRenderProcessGone(errorCode);
         }
 
         @Override
@@ -271,6 +318,11 @@ public class MraidController {
         @Override
         public void onPageFailedToLoad() {
             // no-op for two-part expandables. An expandable failing to load should not trigger failover.
+        }
+
+        @Override
+        public void onRenderProcessGone(@NonNull final MoPubErrorCode errorCode) {
+            handleRenderProcessGone(errorCode);
         }
 
         @Override
@@ -830,6 +882,10 @@ public class MraidController {
         LayoutParams layoutParams = new LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         if (mViewState == ViewState.DEFAULT) {
+
+            mOriginalUiFlags = getAndMemoizeRootView().getSystemUiVisibility();
+            getAndMemoizeRootView().setSystemUiVisibility(mExpandedUiFlags);
+
             if (isTwoPart) {
                 mCloseableAdContainer.addView(mTwoPartWebView, layoutParams);
             } else {
@@ -894,6 +950,13 @@ public class MraidController {
         } else if (mViewState == ViewState.DEFAULT) {
             mDefaultAdContainer.setVisibility(View.INVISIBLE);
             setViewState(ViewState.HIDDEN);
+        }
+    }
+
+    @VisibleForTesting
+    void handleRenderProcessGone(@NonNull final MoPubErrorCode errorCode) {
+        if (mMraidListener != null) {
+            mMraidListener.onRenderProcessGone(errorCode);
         }
     }
 
@@ -970,6 +1033,8 @@ public class MraidController {
 
     @VisibleForTesting
     void unApplyOrientation() {
+        getAndMemoizeRootView().setSystemUiVisibility(mOriginalUiFlags);
+
         final Activity activity = mWeakActivity.get();
         if (activity != null && mOriginalActivityOrientation != null) {
             activity.setRequestedOrientation(mOriginalActivityOrientation);
@@ -1122,20 +1187,28 @@ public class MraidController {
             mMraidListener.onOpen();
         }
 
-        UrlHandler.Builder builder = new UrlHandler.Builder();
+        final UrlHandler.Builder builder = new UrlHandler.Builder();
 
         if (mAdReport != null) {
             builder.withDspCreativeId(mAdReport.getDspCreativeId());
         }
 
-        builder.withSupportedUrlActions(
+        final EnumSet<UrlAction> urlActions = EnumSet.of(
                 UrlAction.IGNORE_ABOUT_SCHEME,
                 UrlAction.OPEN_NATIVE_BROWSER,
                 UrlAction.OPEN_IN_APP_BROWSER,
                 UrlAction.HANDLE_SHARE_TWEET,
                 UrlAction.FOLLOW_DEEP_LINK_WITH_FALLBACK,
-                UrlAction.FOLLOW_DEEP_LINK)
-                .build().handleUrl(mContext, url);
+                UrlAction.FOLLOW_DEEP_LINK);
+
+        if (isDebuggable(mContext)) {
+            urlActions.add(UrlAction.HANDLE_MOPUB_SCHEME);
+            builder.withMoPubSchemeListener(mDebugSchemeListener);
+        }
+
+        builder.withSupportedUrlActions(urlActions)
+                .build()
+                .handleUrl(mContext, url);
     }
 
     @VisibleForTesting
