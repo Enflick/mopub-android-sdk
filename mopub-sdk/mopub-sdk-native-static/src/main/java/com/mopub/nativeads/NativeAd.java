@@ -62,6 +62,7 @@ public class NativeAd {
     @NonNull private final Set<String> mClickTrackers;
     @NonNull private final String mAdUnitId;
     @Nullable private ImpressionData mImpressionData;
+    @Nullable private AdResponse mAdResponse;
     @Nullable private MoPubNativeEventListener mMoPubNativeEventListener;
 
     private boolean mRecordedImpression;
@@ -110,6 +111,11 @@ public class NativeAd {
              @NonNull final MoPubAdRenderer moPubAdRenderer){
         this(context, adResponse.getImpressionTrackingUrls(), adResponse.getClickTrackingUrl(), adUnitId, baseNativeAd, moPubAdRenderer);
         mImpressionData = adResponse.getImpressionData();
+        mAdResponse = adResponse;
+    }
+
+    public AdResponse getAdResponse() {
+        return mAdResponse;
     }
 
     @Override
