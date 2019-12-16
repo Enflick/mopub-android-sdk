@@ -854,4 +854,11 @@ public class AdViewControllerTest {
 
         return parameter;
     }
+
+    @Test
+    public void testBackFactorConfiguration() {
+        subject.setAdUnitId("abc123");
+        subject.setBackOffFactor(1);
+        assertThat(subject.mBackOffFactor).isEqualTo(1);
+    }
 }

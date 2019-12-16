@@ -51,7 +51,7 @@ import static com.mopub.common.logging.MoPubLog.SdkLogEvent.CUSTOM;
 public class AdViewController {
     static final int DEFAULT_REFRESH_TIME_MILLISECONDS = 60000;  // 1 minute
     private static final int MAX_REFRESH_TIME_MILLISECONDS = 600000; // 10 minutes
-    private static final double BACKOFF_FACTOR = 1.5;
+    private static final double DEFAULT_BACKOFF_FACTOR = 1.5;
     private static final FrameLayout.LayoutParams WRAP_AND_CENTER_LAYOUT_PARAMS =
             new FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.WRAP_CONTENT,
@@ -79,6 +79,8 @@ public class AdViewController {
     // This is the power of the exponential term in the exponential backoff calculation.
     @VisibleForTesting
     int mBackoffPower = 1;
+    @VisibleForTesting
+    double mBackOffFactor = DEFAULT_BACKOFF_FACTOR;
 
     private Map<String, Object> mLocalExtras = new HashMap<>();
 
@@ -604,7 +606,7 @@ public class AdViewController {
 
             mHandler.postDelayed(mRefreshRunnable,
                     Math.min(MAX_REFRESH_TIME_MILLISECONDS,
-                            mRefreshTimeMillis * (long) Math.pow(BACKOFF_FACTOR, mBackoffPower)));
+                            mRefreshTimeMillis * (long) Math.pow(mBackOffFactor, mBackoffPower)));
         }
     }
 
@@ -679,6 +681,10 @@ public class AdViewController {
         } else {
             return WRAP_AND_CENTER_LAYOUT_PARAMS;
         }
+    }
+
+    void setBackOffFactor(double backOffFactor) {
+        mBackOffFactor = backOffFactor;
     }
 
     @Deprecated // for testing
